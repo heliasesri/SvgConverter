@@ -1,0 +1,81 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  
+  <title>ArcGIS API for JavaScript 4.25</title>
+
+  <style>
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #previewDiv {
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://jsdev.arcgis.com/4.25/esri/themes/light/main.css" />
+
+  <script src="https://jsdev.arcgis.com/4.25/"></script>
+
+  <script>
+    require([
+      "esri/symbols/support/symbolUtils",
+      "esri/symbols/CIMSymbol",
+      "esri/rest/symbolService",
+      "esri/symbols/support/cimSymbolUtils"
+    ], (symbolUtils, CIMSymbol, symbolService, cimSymbolUtils) => {
+      const symbolServiceUrl = "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/Symbols/SymbolServer";
+      const previewDiv = document.getElementById("previewDiv");
+      
+      function preview(symbol) {
+        symbolUtils.renderPreviewHTML(symbol)
+          .then((node) => {
+          console.log(node)
+              previewDiv.appendChild(node);
+            }).catch((error) => {
+            console.log("catch", error);
+          });
+      }
+//       const svgString = `
+//       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="300px" height="300px" viewBox="0 0 300 300">
+//     <path d="M150 0 L75 200 L225 200 Z" /></svg>
+// `;
+
+//       const svgString = `<svg xmlns="http://www.w3.org/2000/svg" height="200" width="200">
+//         <path d="M150 0 L75 200 L225 200 Z" />
+//       </svg>`
+      const uploadForm = document.forms["uploadForm"];
+      // const uploadForm = new FormData(form);
+      uploadForm.addEventListener("change", (event) => {
+        const fileName = event.target.value.toLowerCase();
+        if (fileName.indexOf(".svg") !== -1) {
+            const params = { svgImage: uploadForm };
+            symbolService.generateSymbol(symbolServiceUrl, params).then(({symbol})=>{
+              let sym = symbol;
+              console.log(sym)
+              cimSymbolUtils.scaleCIMSymbolTo(sym, 50)
+              preview(sym);
+            }).catch((error) =>{
+              console.log(error)
+            });
+        }
+     });
+    });
+  </script>
+</head>
+
+<body>
+  <form name="uploadForm">
+    <input type="file" name="svgImage" id="svgFile" accept=".svg"/>
+  </form>
+  <div id="previewDiv" class="esri-widget"></div>
+</body>
+
+</html>
